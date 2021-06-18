@@ -1,7 +1,20 @@
 const router = require('express').Router();
+const bcrypt = require('bcryptjs')
+const Users = require('../users/users-model')
+const tokenBuilder = require('./token-builder')
 
 router.post('/register', (req, res) => {
-  res.end('implement register, please!');
+  const { username, password } = req.body
+  let user = { username, password }
+  const rounds = process.env.BCRYPT_ROUNDS || 8
+  const hash = bcrypt.hashSync(user.password, rounds)
+  user.password = hash
+
+  Users.add(user)
+    .then(newUser => {
+      res.status(201).json(newUser)
+    })
+    .catch(res.status(401).json({message: `didn't work`}))
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -31,6 +44,15 @@ router.post('/register', (req, res) => {
 
 router.post('/login', (req, res) => {
   res.end('implement login, please!');
+
+  const { username, password, user_id, role_name } = req.user
+
+    if(bcrypt.compareSync(req.body.password, password)) {
+      const token = tokenBuilder({user_id, username, role_name})
+      res.status(200).json({message: `${username} is back!`, token})
+    } else {
+      res.status(400).json({message: 'Invalid Credentials'})
+    }
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
