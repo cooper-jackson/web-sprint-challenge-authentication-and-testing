@@ -2,8 +2,9 @@ const router = require('express').Router();
 const bcrypt = require('bcryptjs')
 const Users = require('../users/users-model')
 const tokenBuilder = require('./token-builder')
+const md = require('./auth-middleware')
 
-router.post('/register', (req, res, next) => {
+router.post('/register', md.checkUsernameUnique, (req, res, next) => {
   const { username, password } = req.body
   let user = { username, password }
   const rounds = process.env.BCRYPT_ROUNDS || 8
@@ -42,12 +43,12 @@ router.post('/register', (req, res, next) => {
   */
 });
 
-router.post('/login', (req, res) => {
-  const { username, password } = req.user
+router.post('/login', md.validateBody, md.checkUsernameExists, (req, res) => {
+  const { username, password, id } = req.user
 
     if(bcrypt.compareSync(req.body.password, password)) {
-      const token = tokenBuilder({username})
-      res.status(200).json({message: `${username} is back!`, token})
+      const token = tokenBuilder({id, username})
+      res.status(200).json({message: `welcome, ${username}!`, token})
     } else {
       res.status(400).json({message: 'Invalid Credentials'})
     }
