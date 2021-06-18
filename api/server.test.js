@@ -47,11 +47,15 @@ describe('[POST] LOGIN user', () => {
 }) 
 
 describe('[GET] /api/jokes', () => {
-  it('Returns 200 status code', () => {
-    // await request(server).post('/api/auth/register').send(user)
-    // const res = await request(server).post('/api/auth/login').send(user)
+  it('Returns 200 status code', async () => {
+    await request(server).post('/api/auth/register').send(user)
+    const res = await request(server).post('/api/auth/login').send(user)
+    expect(res.status).toBe(200)
   })
-  it('Returns new user', () => {
-    
+  it('Returns array of jokes', async() => {
+    await request(server).post('/api/auth/register').send(user)
+    const res = await request(server).post('/api/auth/login').send(user)
+    const jokes = await request(server).get('/api/jokes').set('Authorization', res.body.token)
+    expect(jokes.body).toHaveLength(3)
   })
 })
